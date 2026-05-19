@@ -28,7 +28,16 @@ export function CheckerEngine() {
     clearResults();
     setRunning(true);
     setProgress(0);
-    setStartTime(Date.now());
+    const start = Date.now();
+    setStartTime(start);
+
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) return prev;
+        return prev + Math.random() * 5;
+      });
+    }, 500);
 
     try {
       const response = await fetch('/api/check', {
@@ -42,6 +51,9 @@ export function CheckerEngine() {
         }),
       });
 
+      clearInterval(progressInterval);
+      setProgress(100);
+
       const data = await response.json();
 
       if (data.success) {
@@ -51,7 +63,7 @@ export function CheckerEngine() {
         });
 
         // Update final stats
-        const elapsed = (Date.now() - startTime) / 1000;
+        const elapsed = (Date.now() - start) / 1000;
         const cpm = (data.results.length / elapsed) * 60;
 
         updateStats({
@@ -70,9 +82,11 @@ export function CheckerEngine() {
         alert(`Error: ${data.error}`);
       }
     } catch (error: any) {
+      clearInterval(progressInterval);
       alert(`Failed to check accounts: ${error.message}`);
     } finally {
       setRunning(false);
+      setProgress(0);
     }
   };
 
