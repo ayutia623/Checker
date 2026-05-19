@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCheckerStore } from '@/lib/store';
 
 export function CheckerEngine() {
@@ -18,6 +18,16 @@ export function CheckerEngine() {
 
   const [progress, setProgress] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   const startChecking = async () => {
     if (accounts.length === 0) {
@@ -32,7 +42,7 @@ export function CheckerEngine() {
     setStartTime(start);
 
     // Simulate progress updates
-    const progressInterval = setInterval(() => {
+    progressIntervalRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) return prev;
         return prev + Math.random() * 5;
@@ -51,7 +61,10 @@ export function CheckerEngine() {
         }),
       });
 
-      clearInterval(progressInterval);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
       setProgress(100);
 
       const data = await response.json();
@@ -82,7 +95,10 @@ export function CheckerEngine() {
         alert(`Error: ${data.error}`);
       }
     } catch (error: any) {
-      clearInterval(progressInterval);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
       alert(`Failed to check accounts: ${error.message}`);
     } finally {
       setRunning(false);
@@ -91,7 +107,12 @@ export function CheckerEngine() {
   };
 
   const stopChecking = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
     setRunning(false);
+    setProgress(0);
   };
 
   return (
