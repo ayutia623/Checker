@@ -26,10 +26,10 @@ export abstract class BaseChecker {
     });
   }
 
-  abstract check(email: string, password: string): Promise<CheckResult>;
+  abstract check(credential: string, password: string): Promise<CheckResult>;
 
   protected createResult(
-    email: string,
+    credential: string,
     password: string,
     platform: string,
     status: 'valid' | 'invalid' | 'error',
@@ -37,7 +37,7 @@ export abstract class BaseChecker {
     error?: string
   ): CheckResult {
     return {
-      account: { email, password, platform },
+      account: { email: credential, password, platform }, // Keep email field for backward compatibility
       status,
       capture,
       error,
