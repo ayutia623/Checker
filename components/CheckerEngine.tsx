@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCheckerStore } from '@/lib/store';
 
 export function CheckerEngine() {
@@ -18,6 +18,16 @@ export function CheckerEngine() {
 
   const [progress, setProgress] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   const startChecking = async () => {
     if (accounts.length === 0) {
@@ -28,7 +38,16 @@ export function CheckerEngine() {
     clearResults();
     setRunning(true);
     setProgress(0);
-    setStartTime(Date.now());
+    const start = Date.now();
+    setStartTime(start);
+
+    // Simulate progress updates
+    progressIntervalRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) return prev;
+        return prev + Math.random() * 5;
+      });
+    }, 500);
 
     try {
       const response = await fetch('/api/check', {
@@ -42,6 +61,12 @@ export function CheckerEngine() {
         }),
       });
 
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      setProgress(100);
+
       const data = await response.json();
 
       if (data.success) {
@@ -51,7 +76,7 @@ export function CheckerEngine() {
         });
 
         // Update final stats
-        const elapsed = (Date.now() - startTime) / 1000;
+        const elapsed = (Date.now() - start) / 1000;
         const cpm = (data.results.length / elapsed) * 60;
 
         updateStats({
@@ -70,14 +95,24 @@ export function CheckerEngine() {
         alert(`Error: ${data.error}`);
       }
     } catch (error: any) {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
       alert(`Failed to check accounts: ${error.message}`);
     } finally {
       setRunning(false);
+      setProgress(0);
     }
   };
 
   const stopChecking = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
     setRunning(false);
+    setProgress(0);
   };
 
   return (
