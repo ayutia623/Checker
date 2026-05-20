@@ -8,12 +8,12 @@ export const PLATFORMS: Platform[] = [
   { id: 'protonmail', name: 'ProtonMail', category: 'email', enabled: true },
   
   // Gaming Platforms - PC
-  { id: 'steam', name: 'Steam', category: 'gaming', enabled: true },
+  { id: 'steam', name: 'Steam', category: 'gaming', enabled: true, credentialType: 'username' },
   { id: 'epic', name: 'Epic Games', category: 'gaming', enabled: true },
-  { id: 'roblox', name: 'Roblox', category: 'gaming', enabled: true },
-  { id: 'riot', name: 'Riot Games', category: 'gaming', enabled: true },
-  { id: 'valorant', name: 'Valorant', category: 'gaming', enabled: true },
-  { id: 'lol', name: 'League of Legends', category: 'gaming', enabled: true },
+  { id: 'roblox', name: 'Roblox', category: 'gaming', enabled: true, credentialType: 'username' },
+  { id: 'riot', name: 'Riot Games', category: 'gaming', enabled: true, credentialType: 'username' },
+  { id: 'valorant', name: 'Valorant', category: 'gaming', enabled: true, credentialType: 'username' },
+  { id: 'lol', name: 'League of Legends', category: 'gaming', enabled: true, credentialType: 'username' },
   { id: 'ea', name: 'EA Origin', category: 'gaming', enabled: true },
   { id: 'ubisoft', name: 'Ubisoft', category: 'gaming', enabled: true },
   { id: 'battlenet', name: 'Battle.net', category: 'gaming', enabled: true },
@@ -106,4 +106,9 @@ export function getPlatformById(id: string): Platform | undefined {
 
 export function getAllPlatforms(): Platform[] {
   return PLATFORMS;
+}
+
+export function getPlatformCredentialType(platformId: string): 'email' | 'username' {
+  const platform = getPlatformById(platformId);
+  return platform?.credentialType || 'email'; // Default to email for backward compatibility
 }
